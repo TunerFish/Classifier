@@ -64,47 +64,48 @@ def extract(track_metadata, genre_metadata, path):
         # for some reason, librosa's find_file returns two of each file in a path, and we don't want that
         if i % 2 == 0:
             features = []
-
             song_id = song_id + 1
             print("Reading Song#{}: ".format(song_id) + mp3_files[i] + "...")
+            try:
+                # Features related to music, such as beat, tempo, etc
+                y, sr = librosa.load(mp3_files[i], duration=30)
+                tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+                chroma_stft = librosa.feature.chroma_stft(y=y, sr=sr)
+                rmse = librosa.feature.rmse(y=y)
+                cent = librosa.feature.spectral_centroid(y=y, sr=sr)
+                spec_bw = librosa.feature.spectral_bandwidth(y=y, sr=sr)
+                rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
+                zcr = librosa.feature.zero_crossing_rate(y)
+                mfcc = librosa.feature.mfcc(y=y, sr=sr)
+                genre = get_genre_for_current_song(track_metadata, genre_metadata, mp3_files[i])
+                print genre
 
-            # Features related to music, such as beat, tempo, etc
-            y, sr = librosa.load(mp3_files[i], duration=30)
-            tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
-            chroma_stft = librosa.feature.chroma_stft(y=y, sr=sr)
-            rmse = librosa.feature.rmse(y=y)
-            cent = librosa.feature.spectral_centroid(y=y, sr=sr)
-            spec_bw = librosa.feature.spectral_bandwidth(y=y, sr=sr)
-            rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
-            zcr = librosa.feature.zero_crossing_rate(y)
-            mfcc = librosa.feature.mfcc(y=y, sr=sr)
-            genre = get_genre_for_current_song(track_metadata, genre_metadata, mp3_files[i])
-            print genre
+                # appending all the features to a list
+                features.append(song_id)
+                features.append(mp3_files[i])
+                features.append(tempo)
+                features.append(np.sum(beats))
+                features.append(np.mean(chroma_stft))
+                features.append(np.mean(rmse))
+                features.append(np.mean(cent))
+                features.append(np.mean(spec_bw))
+                features.append(np.mean(rolloff))
+                features.append(np.mean(zcr))
+                for coefficient in mfcc:
+                    features.append(np.mean(coefficient))
+                features.append(genre)
 
-            # appending all the features to a list
-            features.append(song_id)
-            features.append(mp3_files[i])
-            features.append(tempo)
-            features.append(np.sum(beats))
-            features.append(np.mean(chroma_stft))
-            features.append(np.mean(rmse))
-            features.append(np.mean(cent))
-            features.append(np.mean(spec_bw))
-            features.append(np.mean(rolloff))
-            features.append(np.mean(zcr))
-            for coefficient in mfcc:
-                features.append(np.mean(coefficient))
-            features.append(genre)
+                # appending the list of features to another list for our dataset
+                dataset.append(features)
+            except ValueError:
+                print("Corrupted song!")
+                continue
 
-            # appending the list of features to another list for our dataset
-            dataset.append(features)
-			
-	heading = ['id', 'songname', 'tempo', 'beats', 'chromagram', 'rmse',
+    heading = ['id', 'songname', 'tempo', 'beats', 'chromagram', 'rmse',
            'centroid', 'bandwidth', 'rolloff', 'zcr', 'mfcc1', 'mfcc2',
            'mfcc3', 'mfcc4', 'mfcc5', 'mfcc6', 'mfcc7', 'mfcc8', 'mfcc9',
            'mfcc10', 'mfcc11', 'mfcc12', 'mfcc13', 'mfcc14', 'mfcc15',
            'mfcc16', 'mfcc17', 'mfcc18', 'mfcc19', 'mfcc20', 'genre']
-		   
     return dataset, heading
 
 
