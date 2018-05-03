@@ -59,53 +59,122 @@ def extract(track_metadata, genre_metadata, path):
     song_id = 0
     dataset = []
     mp3_files = librosa.util.find_files(path)  # load all mp3 files in the path, including inside subdirectories
+    experimental_counter = 0
 
-    for i in xrange(len(mp3_files)):
+    for i in range(len(mp3_files)):
         # for some reason, librosa's find_file returns two of each file in a path, and we don't want that
         if i % 2 == 0:
             features = []
             song_id = song_id + 1
             print("Reading Song#{}: ".format(song_id) + mp3_files[i] + "...")
             try:
-                # Features related to music, such as beat, tempo, etc
-                y, sr = librosa.load(mp3_files[i], duration=30)
-                tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
-                chroma_stft = librosa.feature.chroma_stft(y=y, sr=sr)
-                rmse = librosa.feature.rmse(y=y)
-                cent = librosa.feature.spectral_centroid(y=y, sr=sr)
-                spec_bw = librosa.feature.spectral_bandwidth(y=y, sr=sr)
-                rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
-                zcr = librosa.feature.zero_crossing_rate(y)
-                mfcc = librosa.feature.mfcc(y=y, sr=sr)
                 genre = get_genre_for_current_song(track_metadata, genre_metadata, mp3_files[i])
-                print genre
+                print(genre)
+                if genre == "Experimental":
+                    print("Disregarding Experimental music!")
+                    experimental_counter += 1
+                    print("Number of experimental music: %s" % experimental_counter)
+                else:
+                    # Features related to music, such as beat, tempo, etc
+                    y, sr = librosa.load(mp3_files[i], duration=30)
+                    zero_crossing_rate = librosa.feature.zero_crossing_rate(y)
+                    spectral_centroid = librosa.feature.spectral_centroid(y=y, sr=sr)
+                    spectral_contrast = librosa.feature.spectral_contrast(y=y, sr=sr)
+                    spectral_bandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr)
+                    spectral_rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
+                    mfccs = librosa.feature.mfcc(y=y, sr=sr)
 
-                # appending all the features to a list
-                features.append(song_id)
-                features.append(mp3_files[i])
-                features.append(tempo)
-                features.append(np.sum(beats))
-                features.append(np.mean(chroma_stft))
-                features.append(np.mean(rmse))
-                features.append(np.mean(cent))
-                features.append(np.mean(spec_bw))
-                features.append(np.mean(rolloff))
-                features.append(np.mean(zcr))
-                for coefficient in mfcc:
-                    features.append(np.mean(coefficient))
-                features.append(genre)
+                    features.append(song_id)
+                    features.append(mp3_files[i])
 
-                # appending the list of features to another list for our dataset
-                dataset.append(features)
+                    features.append(np.mean(zero_crossing_rate))
+                    features.append(np.std(zero_crossing_rate))
+
+                    features.append(np.mean(spectral_centroid))
+                    features.append(np.std(spectral_centroid))
+
+                    features.append(np.mean(spectral_contrast))
+                    features.append(np.std(spectral_contrast))
+
+                    features.append(np.mean(spectral_bandwidth))
+                    features.append(np.std(spectral_bandwidth))
+
+                    features.append(np.mean(spectral_rolloff))
+                    features.append(np.std(spectral_rolloff))
+
+                    features.append(np.mean(mfccs[1, :]))
+                    features.append(np.std(mfccs[1, :]))
+                    features.append(np.mean(mfccs[2, :]))
+                    features.append(np.std(mfccs[2, :]))
+                    features.append(np.mean(mfccs[3, :]))
+                    features.append(np.std(mfccs[3, :]))
+                    features.append(np.mean(mfccs[4, :]))
+                    features.append(np.std(mfccs[4, :]))
+                    features.append(np.mean(mfccs[5, :]))
+                    features.append(np.std(mfccs[5, :]))
+                    features.append(np.mean(mfccs[6, :]))
+                    features.append(np.std(mfccs[6, :]))
+                    features.append(np.mean(mfccs[7, :]))
+                    features.append(np.std(mfccs[7, :]))
+                    features.append(np.mean(mfccs[8, :]))
+                    features.append(np.std(mfccs[8, :]))
+                    features.append(np.mean(mfccs[9, :]))
+                    features.append(np.std(mfccs[9, :]))
+                    features.append(np.mean(mfccs[10, :]))
+                    features.append(np.std(mfccs[10, :]))
+                    features.append(np.mean(mfccs[11, :]))
+                    features.append(np.std(mfccs[11, :]))
+                    features.append(np.mean(mfccs[12, :]))
+                    features.append(np.std(mfccs[12, :]))
+                    features.append(np.mean(mfccs[13, :]))
+                    features.append(np.std(mfccs[13, :]))
+
+                    features.append(genre)
+                    """
+                    y, sr = librosa.load(mp3_files[i], duration=30)
+                    tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+                    chroma_stft = librosa.feature.chroma_stft(y=y, sr=sr)
+                    rmse = librosa.feature.rmse(y=y)
+                    cent = librosa.feature.spectral_centroid(y=y, sr=sr)
+                    spec_bw = librosa.feature.spectral_bandwidth(y=y, sr=sr)
+                    rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
+                    zcr = librosa.feature.zero_crossing_rate(y)
+                    mfcc = librosa.feature.mfcc(y=y, sr=sr)
+
+                    # appending all the features to a list
+                    features.append(song_id)
+                    features.append(mp3_files[i])
+                    features.append(tempo)
+                    features.append(np.sum(beats))
+                    features.append(np.mean(chroma_stft))
+                    features.append(np.mean(rmse))
+                    features.append(np.mean(cent))
+                    features.append(np.mean(spec_bw))
+                    features.append(np.mean(rolloff))
+                    features.append(np.mean(zcr))
+                    for coefficient in mfcc:
+                        features.append(np.mean(coefficient))
+                    features.append(genre)
+                    """
+
+                    # appending the list of features to another list for our dataset
+                    dataset.append(features)
             except ValueError:
                 print("Corrupted song!")
                 continue
-
+    """
     heading = ['id', 'songname', 'tempo', 'beats', 'chromagram', 'rmse',
            'centroid', 'bandwidth', 'rolloff', 'zcr', 'mfcc1', 'mfcc2',
            'mfcc3', 'mfcc4', 'mfcc5', 'mfcc6', 'mfcc7', 'mfcc8', 'mfcc9',
            'mfcc10', 'mfcc11', 'mfcc12', 'mfcc13', 'mfcc14', 'mfcc15',
            'mfcc16', 'mfcc17', 'mfcc18', 'mfcc19', 'mfcc20', 'genre']
+    """
+    heading = ['id', 'songname', 'zcr_mean', 'zcr_std', 's_cen_mean', 's_cen_std', 's_con_mean', 's_con_std',
+               's_band_mean', 's_band_std', 'sroll_mean', 'sroll_std', 'mfcss1_mean', 'mfcss1_std',
+               'mfcss2_mean', 'mfcss2_std', 'mfcss3_mean', 'mfcss3_std', 'mfcss4_mean', 'mfcss4_std',
+               'mfcss5_mean', 'mfcss5_std', 'mfcss6_mean', 'mfcss6_std', 'mfcss7_mean', 'mfcss7_std',
+               'mfcss8_mean', 'mfcss8_std', 'mfcss9_mean', 'mfcss9_std', 'mfcss10_mean', 'mfcss10_std',
+               'mfcss11_mean', 'mfcss11_std', 'mfcss12_mean', 'mfcss12_std', 'mfcss13_mean', 'mfcss13_std', 'genre']
     return dataset, heading
 
 
@@ -134,7 +203,7 @@ def get_genre_for_current_song(track_metadata, genre_metadata, song):
         genre_list = track_metadata.loc[song_no][("track", "genres")]  # getting list of genres for the song
 
         # getting the most popular genre for the song
-        for i in xrange(len(genre_list)):
+        for i in range(len(genre_list)):
             if genre_metadata.loc[genre_list[i]]["#tracks"] > num_tracks:
                 num_tracks = genre_metadata.loc[genre_list[i]]["#tracks"]
                 genre_index = i
