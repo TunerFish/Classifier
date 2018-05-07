@@ -16,6 +16,13 @@ def load_metadata(filepath):
     filename = basename(filepath)
 
     # just read the csv as a data frame
+
+    if 'features' in filename:
+        return pd.read_csv(filepath, index_col=0, header=[0, 1, 2])
+
+    if 'echonest' in filename:
+        return pd.read_csv(filepath, index_col=0, header=[0, 1, 2])
+
     if 'genres' in filename:
         return pd.read_csv(filepath, index_col=0)
 
@@ -188,10 +195,13 @@ def get_genre_for_current_song(track_metadata, genre_metadata, song):
     """
     # Formatting file name to leave out the file path and extension, as well as remove leading 0's
     # eg. path\to\000002.mp3 becomes 2
-    song_name = basename(song)
-    song_name = splitext(song_name)[0]
-    song_name = song_name.lstrip('0')
-    song_no = int(song_name)
+    if type(song) is str:
+        song_name = basename(song)
+        song_name = splitext(song_name)[0]
+        song_name = song_name.lstrip('0')
+        song_no = int(song_name)
+    else:
+        song_no = song
 
     # Checking to make sure that the genre_top value isn't nan
     if track_metadata.loc[song_no][("track", "genre_top")] == track_metadata.loc[song_no][("track", "genre_top")]:
@@ -202,11 +212,15 @@ def get_genre_for_current_song(track_metadata, genre_metadata, song):
         genre_index = 0  # used to keep track of the index with the greatest number of tracks
         genre_list = track_metadata.loc[song_no][("track", "genres")]  # getting list of genres for the song
 
+        if len(genre_list) == 0:
+            return "NA"
+
         # getting the most popular genre for the song
         for i in range(len(genre_list)):
             if genre_metadata.loc[genre_list[i]]["#tracks"] > num_tracks:
                 num_tracks = genre_metadata.loc[genre_list[i]]["#tracks"]
                 genre_index = i
+        # print("Index: " + str(genre_index))
         return genre_metadata.loc[genre_list[genre_index]]["title"]
 
 
